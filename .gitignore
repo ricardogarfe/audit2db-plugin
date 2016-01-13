@@ -9,3 +9,6 @@
 /pom.xml.releaseBackup
 /release.properties
 /settings.xml
+.idea/
+*.iml
+
