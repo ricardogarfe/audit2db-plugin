@@ -26,6 +26,8 @@ import org.hibernate.tool.hbm2ddl.SchemaExport;
 public class HibernateUtil {
     private final static Logger LOGGER = Logger.getLogger(HibernateUtil.class.getName());
 
+    private static SessionFactory factory = null;
+
     private static Configuration getConfig(final Properties extraProperties) throws HibernateException {
         LOGGER.log(Level.INFO, Messages.HibernateUtil_LoadConfig());
         final Configuration config = new AnnotationConfiguration().configure();
@@ -38,19 +40,20 @@ public class HibernateUtil {
     }
 
     public static SessionFactory getSessionFactory(final Properties extraProperties) {
-        SessionFactory retval = null;
 
-        try {
-            // Load base configuration from hibernate.cfg.xml
-            final Configuration config = getConfig(extraProperties);
-            retval = config.buildSessionFactory();
-        } catch (final Exception e) {
-            // Make sure you log the exception, as it might be swallowed
-            LOGGER.log(Level.SEVERE, Messages.HibernateUtil_FailedSessionFactory(), e);
-            throw new RuntimeException(e);
+        if (factory == null){
+            try {
+                // Load base configuration from hibernate.cfg.xml
+                final Configuration config = getConfig(extraProperties);
+                factory = config.buildSessionFactory();
+            } catch (final Exception e) {
+                // Make sure you log the exception, as it might be swallowed
+                LOGGER.log(Level.SEVERE, Messages.HibernateUtil_FailedSessionFactory(), e);
+                throw new RuntimeException(e);
+            }
         }
+        return factory;
 
-        return retval;
     }
 
     public static SessionFactory getSessionFactory() {
@@ -86,7 +89,7 @@ public class HibernateUtil {
 
         final Configuration config = getConfig(props);
         final SchemaExport generator = new SchemaExport(config);
-        final File tempDdlFile = File.createTempFile("jenkins_audit2db", ".ddl");
+        final File tempDdlFile = new File("jenkins_audit2db.ddl");
         generator.setOutputFile(tempDdlFile.getPath());
         generator.setFormat(true);
         generator.execute(true, false, false, true);
