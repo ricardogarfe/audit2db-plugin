@@ -9,14 +9,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.AnnotationConfiguration;
 import org.jenkins.plugins.audit2db.data.BuildDetailsRepository;
 import org.jenkins.plugins.audit2db.internal.data.AbstractHibernateRepository;
 import org.jenkins.plugins.audit2db.internal.data.BuildDetailsHibernateRepository;
-import org.jenkins.plugins.audit2db.internal.data.HibernateUtil;
 import org.jenkins.plugins.audit2db.model.BuildDetails;
 import org.jenkins.plugins.audit2db.model.BuildNode;
 import org.jenkins.plugins.audit2db.model.BuildParameter;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.springframework.orm.hibernate3.HibernateTemplate;
 import org.springframework.orm.hibernate3.HibernateTransactionManager;
@@ -31,13 +33,20 @@ import org.springframework.transaction.TransactionStatus;
 public class BuildDetailsHibernateRepositoryTests {
     final String hostName = "MY_JENKINS";
 
-    private final BuildDetailsRepository repository = new BuildDetailsHibernateRepository(
-	    HibernateUtil.getSessionFactory(HibernateUtil.getExtraProperties(
-		    TestUtils.JDBC_DRIVER, TestUtils.JDBC_URL,
-		    TestUtils.JDBC_USER, TestUtils.JDBC_PASS)));
+  private BuildDetailsRepository repository;
+  private HibernateTransactionManager txmgr;
 
-    final HibernateTransactionManager txmgr = ((BuildDetailsHibernateRepository) repository)
-    .getTransactionManager();
+  @Before
+  public void setUp () {
+
+    SessionFactory sessionFactory=new AnnotationConfiguration().configure("hibernate.cfg.xml").buildSessionFactory();
+
+    repository = new BuildDetailsHibernateRepository(sessionFactory);
+
+    txmgr = ((BuildDetailsHibernateRepository) repository)
+        .getTransactionManager();
+  }
+
 
     @Test
     public void createShouldReturnMatchingId() {
